@@ -175,7 +175,8 @@ class Playlist extends React.Component {
 
     return (
       <div className="playlist col-md-4">
-        <ol>{songItems}</ol>
+        <h3 className="text-center">Songs</h3>
+        <ol className="songs">{songItems}</ol>
       </div>
     );
   }
@@ -185,6 +186,7 @@ class Playlists extends React.Component {
   render() {
     return (
       <div className="playlists col-md-4">
+        <h3 className="text-center">Playlists</h3>
         <ol>{this.props.playlists}</ol>
       </div>
     );
@@ -218,8 +220,11 @@ class PlaylistViewer extends React.Component {
   
   render() {
     const playlistItems = this.state.playlists.map((playlist, index) => {
+      const active = index == this.state.current_playlist ? 'active' : 'inactive';
+      const className = "row playlist-item " + active;
+
       return (
-        <div className="row playlist-item" key={playlist.name} onClick={() => this.handlePlaylistClick(index)}>{capitalCase(playlist.name)}</div>
+        <div className={className} key={playlist.name} onClick={() => this.handlePlaylistClick(index)}>{capitalCase(playlist.name)}</div>
       );
     })
 

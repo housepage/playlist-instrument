@@ -58,7 +58,7 @@ ol, ul {
   font-weight: bold;
 }
 
-.song {
+.song, .playlist-item {
   border-style: solid;
   border-width: light;
   margin: 5px;
@@ -76,4 +76,14 @@ WebKit inertia scrolling is being added here for any present/future devices that
 .playlist,
 .player {
   overflow-y: scroll;
+}
+
+.active {
+  color: white;
+  background-color: black;
+}
+
+#player {
+  margin-top: 60px;
+  margin-left: 15px;
 }

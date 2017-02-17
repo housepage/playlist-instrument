@@ -16,6 +16,7 @@
     <title>React App</title>
     <link rel="stylesheet prefetch" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script type="text/javascript">
       var player;
 
@@ -31,8 +32,12 @@
         playerReadyResolve();
       }
 
-      function onPlayerStateChange() {
+      function onPlayerStateChange(event) {
         console.log("Changing");
+        console.log(event);
+
+        $('.song').removeClass('active');
+        $($('.song')[event.target.getPlaylistIndex()]).addClass('active');
       }
 
       function onYouTubeIframeAPIReady() {
