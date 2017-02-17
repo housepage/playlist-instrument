@@ -1,10 +1,11 @@
 /*global gapi b:true*/
-/*global $ b:true*/
 /*global YT b:true*/
 /*global player b:true*/
 /*global playerReady b:true*/
 
 import map from 'async/map';
+import $ from 'jquery';
+import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
@@ -100,14 +101,28 @@ function search(q, cb) {
   });
 }
 
-const playlists = [
-  {
-    name: 'Late Night Driving',
-    songs: [{artist:{ name: 'David Bowie' }, title: 'Space Oddity', album: 'Simple Bullshit'},
-      {artist:{name: 'Daft Punk'}, title: 'Discovery', 'album': 'Discovery'}
-    ]
+function capitalCase(text) {
+  return _.words(text, /[^ ]+/g).map((word) => _.capitalize(word)).join(' ')
+}
+
+const playlistFiles = JSON.parse($.ajax({
+  url: "http://localhost:3000/playlists/",
+  async: false,
+  dataType: 'json'
+})['responseText']);
+
+const playlists = playlistFiles.map((playlist, index) => {
+  console.log(playlist);
+  const songs = JSON.parse($.ajax({
+    url: 'http://localhost:3000/playlists/' + playlist,
+    async: false
+  })['responseText']);
+
+  return {
+    name: playlist.replace(/-songza.*/,'').replace(/.json/,'').replace(/-/g,' '),
+    songs: songs
   }
-]
+});
 
 function SongItem(props) {
   return (
@@ -125,7 +140,11 @@ class Playlist extends React.Component {
       map(songs,
         function(song, cb) {
           search(song.title + " " + song.artist.name, (response) => {
-            cb(null,response.items[0].id.videoId);
+            if (response.items.length > 0) {
+              cb(null,response.items[0].id.videoId);
+            } else {
+              cb(null, 'dQw4w9WgXcQ');
+            }
           })
         },
         function(err, videoIds) {
@@ -150,7 +169,7 @@ class Playlist extends React.Component {
       }
 
       return (
-        <SongItem song={song} key={song.title} onClick={onClick} />
+        <SongItem song={song} key={song.title + "-" + song.artist.name} onClick={onClick} />
       );
     })
 
@@ -200,10 +219,10 @@ class PlaylistViewer extends React.Component {
   render() {
     const playlistItems = this.state.playlists.map((playlist, index) => {
       return (
-        <div className="row" key={playlist.name} onClick={() => this.handlePlaylistClick(index)}>{playlist.name}</div>
+        <div className="row playlist-item" key={playlist.name} onClick={() => this.handlePlaylistClick(index)}>{capitalCase(playlist.name)}</div>
       );
     })
-    
+
     return (
       <div className="row">
         <Playlists playlists={playlistItems} />
@@ -214,3 +233,15 @@ class PlaylistViewer extends React.Component {
   }
 }
 
+/*$(document).ready(function() {
+  function setHeight() {
+    const windowHeight = $(window).innerHeight();
+    $('body').css('height', windowHeight);
+  };
+  setHeight();
+
+  console.log('set height');
+  $(window).resize(function() {
+    setHeight();
+  });
+});*/
