@@ -16,18 +16,47 @@
     <title>React App</title>
     <link rel="stylesheet prefetch" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://apis.google.com/js/api.js"></script>
+    <script type="text/javascript">
+      var player;
+
+      var playerReadyResolve;
+      var playerReady = new Promise( (resolve, reject) => {
+        playerReadyResolve = resolve;
+
+        setTimeout(3000,reject);
+      });
+
+      function onPlayerReady(event) {
+        console.log("Player Ready: " + event);
+        playerReadyResolve();
+      }
+
+      function onPlayerStateChange() {
+        console.log("Changing");
+      }
+
+      function onYouTubeIframeAPIReady() {
+        console.log("Iframe API ready");
+        player = new YT.Player('player', {
+          videoId: 'dQw4w9WgXcQ',
+          events: {
+            'onReady': window.onPlayerReady,
+            'onStateChange': window.onPlayerStateChange
+          }
+        });
+        console.log("Player created");
+      }
+
+      function loadYouTubeIframeAPI() {
+        var youtubeTag = document.createElement('script');
+
+        youtubeTag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(youtubeTag, firstScriptTag);
+      }
+    </script>
   </head>
-  <body>
+  <body onload="loadYouTubeIframeAPI()">
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start`.
-      To create a production bundle, use `npm run build`.
-    -->
   </body>
 </html>

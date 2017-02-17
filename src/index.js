@@ -1,7 +1,10 @@
 /*global gapi b:true*/
 /*global $ b:true*/
 /*global YT b:true*/
+/*global player b:true*/
+/*global playerReady b:true*/
 
+import map from 'async/map';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
@@ -17,8 +20,6 @@ var OAUTH2_SCOPES = [
 ];
 
 var OAUTH2_CLIENT_SECRET = '13jPtk4BjJZszhm1NHyb5xc6';
-
-var player;
 
 // Upon loading, the Google APIs JS client automatically invokes this callback.
 function googleApiClientReady() {
@@ -76,6 +77,10 @@ function loadAPIClientInterfaces() {
 // After the API loads, call a function to enable the search box.
 function handleAPILoaded() {
   console.log("API loaded");
+  ReactDOM.render(
+    <PlaylistViewer />,
+    document.getElementById('root')
+  );
 }
 
 gapi.load('client', googleApiClientReady);
@@ -98,7 +103,9 @@ function search(q, cb) {
 const playlists = [
   {
     name: 'Late Night Driving',
-    songs: [{artist:{ name: 'David Bowie' }, title: 'Space Oddity', album: 'Simple Bullshit'}]
+    songs: [{artist:{ name: 'David Bowie' }, title: 'Space Oddity', album: 'Simple Bullshit'},
+      {artist:{name: 'Daft Punk'}, title: 'Discovery', 'album': 'Discovery'}
+    ]
   }
 ]
 
@@ -113,23 +120,40 @@ function SongItem(props) {
 }
 
 class Playlist extends React.Component {
+  fetchVideoIds(songs) {
+    return new Promise(function(resolve, reject) {
+      map(songs,
+        function(song, cb) {
+          search(song.title + " " + song.artist.name, (response) => {
+            cb(null,response.items[0].id.videoId);
+          })
+        },
+        function(err, videoIds) {
+          resolve(videoIds);
+        }
+      )
+    })
+  }
+
+
   render() {
-    var self = this;
+    const videoIdsPromise = this.fetchVideoIds(this.props.songs);
+
+    Promise.all([videoIdsPromise, playerReady]).then((videoIds) => {
+      player.loadPlaylist(videoIds);
+      player.playVideo();
+    });
+
     const songItems = this.props.songs.map((song, index) => {
       const onClick = () => {
-        console.log("Clicking and searching");
-        search(song.title, (response) => {
-           console.log("Search back");
-           window.player.loadVideoById({'videoId': response.items[0].id.videoId,
-               'suggestedQuality': 'large'});
-        })  
+        player.playVideoAt(index)
       }
 
       return (
         <SongItem song={song} key={song.title} onClick={onClick} />
       );
     })
-    
+
     return (
       <div className="playlist col-md-4">
         <ol>{songItems}</ol>
@@ -151,7 +175,10 @@ class Playlists extends React.Component {
 class Player extends React.Component {
   render() {
     return (
-      <div id="player" className="col-md-4">
+      <div className="col-md-4">
+        <iframe id="player" type="text/html" width="640" height="390"
+          src="http://www.youtube.com/embed/M7lc1UVf-VE?enablejsapi=1&origin=http://localhost:3000"
+            frameBorder="0"></iframe>
       </div>
     );
   }
@@ -187,36 +214,3 @@ class PlaylistViewer extends React.Component {
   }
 }
 
-// 2. This code loads the IFrame Player API code asynchronously.
-var youtubeTag = document.createElement('script');
-
-youtubeTag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(youtubeTag, firstScriptTag);
-
-function onPlayerReady(input) {
-  console.log("Player Ready: " + input);
-}
-
-function onPlayerStateChange(){
-  
-}
-// 3. This function creates an <iframe> (and YouTube player)
-//    after the API code downloads.
-window.onYouTubeIframeAPIReady = function() {
-  console.log('Getting ready');
-  window.player = new YT.Player('player', {
-    height: '390',
-    width: '640',
-    videoId: 'M7lc1UVf-VE',
-    events: {
-      'onReady': onPlayerReady,
-      'onStateChange': onPlayerStateChange
-    }
-  });
-}
-
-ReactDOM.render(
-  <PlaylistViewer />,
-  document.getElementById('root')
-);
